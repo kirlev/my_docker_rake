@@ -41,7 +41,10 @@ module MyDockerRake
             end
 
           projects.each do |project|
-            image = project2image(project)
+            container = containers.find{ |c| c[:name] == project }
+            version =  container && container[:version]
+            image = project2image(project,version)
+            
             puts "---> building #{image} ..."
             sh <<-EOC.gsub(/\s+/, ' ')
               docker build \
@@ -96,7 +99,7 @@ module MyDockerRake
                 #{ ports.map { |p| "-p #{p}" }.join(' ') } \
                 #{ volumes_from.map { |v| "--volumes-from #{v}" }.join(' ') } \
                 #{ container[:options] } \
-                #{ container[:image] }
+                #{ project2image(container[:image],container[:version]) }
             EOC
           end
         end

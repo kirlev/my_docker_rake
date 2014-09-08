@@ -81,8 +81,9 @@ module MyDockerRake
       }
     end
 
-    def project2image(project)
+    def project2image(project,version = nil)
       image, tag = project.split('/')
+      tag ||= version
       image = image.gsub('_', '/')
 
       "#{image}#{tag ? ":#{tag}" : ''}"
