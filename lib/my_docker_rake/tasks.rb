@@ -40,10 +40,10 @@ module MyDockerRake
               get_projects('./dockerfiles')
             end
 
-          projects.each do |project|
-            container = containers.find{ |c| c[:name] == project }
-            version =  container && container[:version]
-            image = project2image(project,version)
+          containers.each do |container|
+            version =  container[:version]
+            name = container[:name].match(/\A[^_]+/)[0]
+            image = project2image(name,version)
             
             puts "---> building #{image} ..."
             sh <<-EOC.gsub(/\s+/, ' ')
@@ -51,7 +51,7 @@ module MyDockerRake
                 #{_no_cache ? '--no-cache' : ''} \
                 #{_rm_build ? '--rm' : ''} \
                 -t #{image} \
-                dockerfiles/#{project}
+                dockerfiles/#{name}
             EOC
           end
 
