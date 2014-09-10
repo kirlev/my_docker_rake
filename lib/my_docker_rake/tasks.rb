@@ -27,20 +27,18 @@ module MyDockerRake
       namespace :docker do
 
         desc "Build project's docker images"
-        task :build, [:projects, :no_cache, :rm_build] do |t, args|
+        task :build, [:container_names, :no_cache, :rm_build] do |t, args|
           _no_cache = args.no_cache || ENV['DOCKER_NO_CACHE'] || no_cache
           _rm_build = args.rm_build || ENV['DOCKER_RM_BUILD'] || rm_build
 
-          projects = case
-            when !args.projects.blank?
-              args.projects.split(/,/)
-            when !ENV['DOCKER_PROJECTS'].blank?
-              ENV['DOCKER_PROJECTS'].split(/,/)
-            else
-              get_projects('./dockerfiles')
-            end
+          names_filter = containers.map{|c| c[:name]}
+          unless args.container_names.blank?
+            names_filter = args.container_names.split(',')
+          end
 
-          containers.each do |container|
+          containers.select do |container| 
+          	names_filter.any?{ |pattern| container[:name] =~ /#{pattern}/}
+          end.each do |container|
             version =  container[:version]
             name = container[:name].match(/\A[^_]+/)[0]
             image = project2image(name,version)
