@@ -16,6 +16,7 @@ module MyDockerRake
     attr_accessor :rm_build
     attr_accessor :after_build
     attr_accessor :no_daemon
+    attr_accessor :multithreaded_build
 
     def initialize(*args, &configure_block)
       configure_block.call(self) if configure_block
@@ -36,13 +37,14 @@ module MyDockerRake
             names_filter = args.container_names.split(',')
           end
 
+          threads=[]
           containers.select do |container| 
           	names_filter.any?{ |pattern| container[:name] =~ /#{pattern}/}
           end.each do |container|
+          	t = Thread.new {
             version =  container[:version]
             name = container[:name].match(/\A[^_]+/)[0]
             image = project2image(name,version)
-            
             puts "---> building #{image} ..."
             sh <<-EOC.gsub(/\s+/, ' ')
               docker build \
@@ -51,7 +53,15 @@ module MyDockerRake
                 -t #{image} \
                 dockerfiles/#{name}
             EOC
+            }
+            t.abort_on_exception = true
+            if multithreaded_build
+              threads << t
+            else
+              t.join
+            end
           end
+          threads.each &:join
 
           unless after_build.blank?
             sh after_build
