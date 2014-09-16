@@ -28,13 +28,13 @@ module MyDockerRake
       namespace :docker do
 
         desc "Build project's docker images"
-        task :build, [:container_names, :no_cache, :rm_build] do |t, args|
+        task :build, [:container_filter, :no_cache, :rm_build] do |t, args|
           _no_cache = args.no_cache || ENV['DOCKER_NO_CACHE'] || no_cache
           _rm_build = args.rm_build || ENV['DOCKER_RM_BUILD'] || rm_build
 
           names_filter = containers.map{|c| c[:name]}
-          unless args.container_names.blank?
-            names_filter = args.container_names.split(',')
+          unless args.container_filter.blank?
+            names_filter = args.container_filter.split(',')
           end
 
           threads=[]
